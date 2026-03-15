@@ -1,4 +1,3 @@
 package com.soonaemyoback.domain.member.member.repository;
 
-public interface MemberRepository {
-}
+public interface MemberRepository {}

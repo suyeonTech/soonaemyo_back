@@ -1,4 +1,3 @@
 package com.soonaemyoback.domain.member.admin.repository;
 
-public interface AdminRepository {
-}
+public interface AdminRepository {}

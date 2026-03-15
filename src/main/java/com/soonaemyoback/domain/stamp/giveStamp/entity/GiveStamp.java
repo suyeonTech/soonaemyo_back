@@ -1,13 +1,13 @@
 package com.soonaemyoback.domain.stamp.giveStamp.entity;
 
+import com.soonaemyoback.domain.member.admin.entity.Admin;
+import com.soonaemyoback.domain.member.member.entity.Member;
+import com.soonaemyoback.global.jpa.entity.BaseEntity;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import com.soonaemyoback.domain.member.admin.entity.Admin;
-import com.soonaemyoback.domain.member.member.entity.Member;
-import com.soonaemyoback.global.jpa.entity.BaseEntity;
 
 @Entity
 @Getter

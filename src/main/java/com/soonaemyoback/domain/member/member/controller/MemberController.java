@@ -1,4 +1,3 @@
 package com.soonaemyoback.domain.member.member.controller;
 
-public class MemberController {
-}
+public class MemberController {}

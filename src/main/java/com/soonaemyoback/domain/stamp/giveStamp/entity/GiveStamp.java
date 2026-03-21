@@ -4,16 +4,18 @@ import com.soonaemyoback.domain.member.admin.entity.Admin;
 import com.soonaemyoback.domain.member.member.entity.Member;
 import com.soonaemyoback.global.jpa.entity.BaseEntity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 public class GiveStamp extends BaseEntity {
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
@@ -22,5 +24,13 @@ public class GiveStamp extends BaseEntity {
     @JoinColumn(name = "admin_id")
     private Admin admin;
 
-    private String stampKind; // "FOOD", "EXTRA" 등
+    private String stampKind;
+
+    public static GiveStamp create(Member member, Admin admin, String stampKind) {
+        GiveStamp giveStamp = new GiveStamp();
+        giveStamp.member = member;
+        giveStamp.admin = admin;
+        giveStamp.stampKind = stampKind;
+        return giveStamp;
+    }
 }

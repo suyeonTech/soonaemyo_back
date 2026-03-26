@@ -1,6 +1,7 @@
 package com.soonaemyoback.domain.stamp.stamp.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -91,7 +92,7 @@ class StampControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(batchRequest)));
 
-        // 첫 번째 스탬프 ID 조회 (giveStamp 테스트용)
+        // 첫 번째 스탬프 ID·회원 ID 조회 (giveStamp / deleteStamp 테스트용)
         MvcResult stampsResult = mockMvc.perform(get("/api/stamps")
                         .session(adminSession)
                         .param("year", "2025")
@@ -284,5 +285,85 @@ class StampControllerTest {
                         .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.feedStampNum").value(1));
+    }
+
+    // ── DELETE /api/stamps/give ───────────────────────────────────────────────
+
+    @Test
+    @DisplayName("인증 없이 스탬프 삭제 시 401 반환")
+    void deleteStamp_noAuth_returns401() throws Exception {
+        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("FOOD 스탬프 부여 후 삭제 시 feedStampNum 다시 0으로")
+    void deleteStamp_food_afterGive_returnsZero() throws Exception {
+        mockMvc.perform(post("/api/stamps/{stampId}/give", stampId)
+                .session(adminSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))));
+
+        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+                        .session(adminSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.feedStampNum").value(0))
+                .andExpect(jsonPath("$.exStampNum").value(0));
+    }
+
+    @Test
+    @DisplayName("EXTRA 스탬프 부여 후 삭제 시 exStampNum 다시 0으로")
+    void deleteStamp_extra_afterGive_returnsZero() throws Exception {
+        mockMvc.perform(post("/api/stamps/{stampId}/give", stampId)
+                .session(adminSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.EXTRA))));
+
+        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+                        .session(adminSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.EXTRA))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exStampNum").value(0));
+    }
+
+    @Test
+    @DisplayName("스탬프 수가 0인 상태에서 삭제 시 400 반환")
+    void deleteStamp_alreadyZero_returns400() throws Exception {
+        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+                        .session(adminSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 stampId로 삭제 시 404 반환")
+    void deleteStamp_stampNotFound_returns404() throws Exception {
+        mockMvc.perform(delete("/api/stamps/{stampId}/give", 99999L)
+                        .session(adminSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("ROOT로 스탬프 삭제 성공")
+    void deleteStamp_asRoot_success() throws Exception {
+        mockMvc.perform(post("/api/stamps/{stampId}/give", stampId)
+                .session(rootSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))));
+
+        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+                        .session(rootSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.feedStampNum").value(0));
     }
 }

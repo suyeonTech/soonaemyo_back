@@ -15,10 +15,19 @@ public interface StampRepository extends JpaRepository<Stamp, Long> {
             + "WHERE (:year IS NULL OR s.year = :year) "
             + "AND (:semester IS NULL OR s.semester = :semester) "
             + "AND (:name IS NULL OR m.name LIKE CONCAT('%', :name, '%')) "
+            + "AND (:studentNum IS NULL OR m.studentNum = :studentNum) "
             + "ORDER BY m.name")
     List<Stamp> searchStamps(
-            @Param("year") Integer year, @Param("semester") Integer semester, @Param("name") String name);
+            @Param("year") Integer year,
+            @Param("semester") Integer semester,
+            @Param("name") String name,
+            @Param("studentNum") String studentNum);
 
     @Query("SELECT s FROM Stamp s JOIN FETCH s.member WHERE s.id = :id")
     Optional<Stamp> findByIdWithMember(@Param("id") Long id);
+
+    @Query("SELECT s FROM Stamp s JOIN FETCH s.member m "
+            + "WHERE m.id = :memberId AND s.year = :year AND s.semester = :semester")
+    Optional<Stamp> findByMemberIdAndYearAndSemester(
+            @Param("memberId") Long memberId, @Param("year") Integer year, @Param("semester") Integer semester);
 }

@@ -48,4 +48,11 @@ public class Member extends BaseEntity {
     public void incrementTotalStampCount() {
         this.totalStampCount++;
     }
+
+    public void decrementTotalStampCount() {
+        if (this.totalStampCount <= 0) {
+            throw new IllegalStateException("누적 스탬프 수가 이미 0입니다.");
+        }
+        this.totalStampCount--;
+    }
 }

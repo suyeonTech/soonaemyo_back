@@ -66,9 +66,9 @@ class MemberStampControllerTest {
     }
 
     @Test
-    @DisplayName("비로그인 상태에서 이름만으로 조회 성공")
-    void getMemberStamps_byNameOnly_noAuth_success() throws Exception {
-        mockMvc.perform(get("/api/member/stamps").param("name", "홍길동"))
+    @DisplayName("비로그인 상태에서 이름 + 학번으로 조회 성공")
+    void getMemberStamps_byNameAndStudentNum_noAuth_success() throws Exception {
+        mockMvc.perform(get("/api/member/stamps").param("name", "홍길동").param("studentNum", "2024001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].year").value(2025))
@@ -78,10 +78,11 @@ class MemberStampControllerTest {
     }
 
     @Test
-    @DisplayName("이름 + 연도·학기 복합 조회 성공")
-    void getMemberStamps_byNameAndYearSemester_success() throws Exception {
+    @DisplayName("이름 + 학번 + 연도·학기 복합 조회 성공")
+    void getMemberStamps_byNameStudentNumAndYearSemester_success() throws Exception {
         mockMvc.perform(get("/api/member/stamps")
                         .param("name", "홍길동")
+                        .param("studentNum", "2024001")
                         .param("year", "2025")
                         .param("semester", "1"))
                 .andExpect(status().isOk())
@@ -90,9 +91,17 @@ class MemberStampControllerTest {
     }
 
     @Test
-    @DisplayName("이름에 일치하는 회원이 없으면 빈 배열 반환")
+    @DisplayName("이름은 맞지만 학번이 틀리면 빈 배열 반환")
+    void getMemberStamps_wrongStudentNum_returnsEmpty() throws Exception {
+        mockMvc.perform(get("/api/member/stamps").param("name", "홍길동").param("studentNum", "9999999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이름과 학번으로 조회하면 빈 배열 반환")
     void getMemberStamps_noMatch_returnsEmpty() throws Exception {
-        mockMvc.perform(get("/api/member/stamps").param("name", "없는사람"))
+        mockMvc.perform(get("/api/member/stamps").param("name", "없는사람").param("studentNum", "9999999"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -100,13 +109,20 @@ class MemberStampControllerTest {
     @Test
     @DisplayName("이름 파라미터 없이 요청 시 400 반환")
     void getMemberStamps_missingName_returns400() throws Exception {
-        mockMvc.perform(get("/api/member/stamps").param("year", "2025")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/member/stamps").param("studentNum", "2024001"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("학번 파라미터 없이 요청 시 400 반환")
+    void getMemberStamps_missingStudentNum_returns400() throws Exception {
+        mockMvc.perform(get("/api/member/stamps").param("name", "홍길동")).andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("응답에 stampId·memberName·studentNum·presentCount가 포함되지 않는다")
     void getMemberStamps_responseDoesNotExposeAdminFields() throws Exception {
-        mockMvc.perform(get("/api/member/stamps").param("name", "홍길동"))
+        mockMvc.perform(get("/api/member/stamps").param("name", "홍길동").param("studentNum", "2024001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].stampId").doesNotExist())
                 .andExpect(jsonPath("$[0].memberName").doesNotExist())

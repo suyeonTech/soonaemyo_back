@@ -50,4 +50,18 @@ public class Stamp extends BaseEntity {
     public void incrementExStampNum() {
         this.exStampNum++;
     }
+
+    public void decrementFeedStampNum() {
+        if (this.feedStampNum <= 0) {
+            throw new IllegalStateException("식사 스탬프 수가 이미 0입니다.");
+        }
+        this.feedStampNum--;
+    }
+
+    public void decrementExStampNum() {
+        if (this.exStampNum <= 0) {
+            throw new IllegalStateException("추가 스탬프 수가 이미 0입니다.");
+        }
+        this.exStampNum--;
+    }
 }

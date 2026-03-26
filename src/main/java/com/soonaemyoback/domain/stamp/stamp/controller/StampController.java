@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,10 +59,11 @@ public class StampController {
     @GetMapping("/member/stamps")
     public ResponseEntity<List<MemberStampResponse>> getMemberStamps(
             @RequestParam String name,
+            @RequestParam String studentNum,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer semester) {
 
-        return ResponseEntity.ok(stampService.getMemberStampList(name, year, semester));
+        return ResponseEntity.ok(stampService.getMemberStampList(name, studentNum, year, semester));
     }
 
     @PostMapping("/stamps/{stampId}/give")
@@ -71,5 +73,14 @@ public class StampController {
             @AuthenticationPrincipal AdminUserDetails adminUserDetails) {
 
         return ResponseEntity.ok(stampService.giveStamp(stampId, request.stampKind(), adminUserDetails.getAdminId()));
+    }
+
+    @DeleteMapping("/stamps/{stampId}/give")
+    public ResponseEntity<StampSummaryResponse> deleteStamp(
+            @PathVariable Long stampId,
+            @RequestBody GiveStampRequest request,
+            @AuthenticationPrincipal AdminUserDetails adminUserDetails) {
+
+        return ResponseEntity.ok(stampService.deleteStamp(stampId, request.stampKind(), adminUserDetails.getAdminId()));
     }
 }

@@ -14,10 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.soonaemyoback.domain.member.admin.dto.AdminCreateRequest;
 import com.soonaemyoback.domain.member.admin.dto.AdminLoginRequest;
+import com.soonaemyoback.domain.member.admin.dto.AdminLoginResponse;
 import com.soonaemyoback.domain.member.admin.dto.AdminResponse;
+import com.soonaemyoback.domain.member.admin.dto.ChangePasswordRequest;
 import com.soonaemyoback.domain.member.admin.entity.Admin;
 import com.soonaemyoback.domain.member.admin.entity.AdminRole;
 import com.soonaemyoback.domain.member.admin.repository.AdminRepository;
+import com.soonaemyoback.global.security.AdminUserDetails;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -32,7 +35,7 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    public void login(AdminLoginRequest request, HttpServletRequest httpRequest) {
+    public AdminLoginResponse login(AdminLoginRequest request, HttpServletRequest httpRequest) {
         UsernamePasswordAuthenticationToken token =
                 new UsernamePasswordAuthenticationToken(request.loginId(), request.password());
         Authentication auth = authenticationManager.authenticate(token);
@@ -41,6 +44,9 @@ public class AdminService {
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+
+        AdminUserDetails userDetails = (AdminUserDetails) auth.getPrincipal();
+        return new AdminLoginResponse(userDetails.admin().getRole().name());
     }
 
     @Transactional
@@ -66,5 +72,22 @@ public class AdminService {
 
     public List<AdminResponse> listAdmins() {
         return adminRepository.findAll().stream().map(AdminResponse::from).toList();
+    }
+
+    @Transactional
+    public void changePassword(Long adminId, ChangePasswordRequest request) {
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new IllegalArgumentException("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+        }
+
+        Admin admin = adminRepository
+                .findById(adminId)
+                .orElseThrow(() -> new NoSuchElementException("관리자를 찾을 수 없습니다: " + adminId));
+
+        if (!passwordEncoder.matches(request.currentPassword(), admin.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+
+        admin.changePassword(passwordEncoder.encode(request.newPassword()));
     }
 }

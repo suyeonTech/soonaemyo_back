@@ -26,11 +26,15 @@ public class GiveStamp extends BaseEntity {
 
     private String stampKind;
 
-    public static GiveStamp create(Member member, Admin admin, String stampKind) {
+    /** 스탬프 변동 수 : 부여 +1, 삭제 -1 */
+    private Integer delta;
+
+    public static GiveStamp create(Member member, Admin admin, String stampKind, int delta) {
         GiveStamp giveStamp = new GiveStamp();
         giveStamp.member = member;
         giveStamp.admin = admin;
         giveStamp.stampKind = stampKind;
+        giveStamp.delta = delta;
         return giveStamp;
     }
 }

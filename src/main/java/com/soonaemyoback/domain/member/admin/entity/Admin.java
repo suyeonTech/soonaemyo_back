@@ -37,4 +37,8 @@ public class Admin extends BaseEntity {
         admin.role = role;
         return admin;
     }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

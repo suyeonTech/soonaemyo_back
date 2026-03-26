@@ -59,13 +59,13 @@ class StampServiceTest {
     // ── getMemberStampList ────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("이름으로만 조회 - 해당 이름의 모든 학기 스탬프 반환")
-    void getMemberStampList_byNameOnly() {
+    @DisplayName("이름 + 학번 조회 - 해당 회원의 모든 학기 스탬프 반환")
+    void getMemberStampList_byNameAndStudentNum() {
         Stamp s1 = Stamp.create(member("홍길동", "2024001"), 2024, 2);
         Stamp s2 = Stamp.create(member("홍길동", "2024001"), 2025, 1);
-        given(stampRepository.searchStamps(null, null, "홍길동")).willReturn(List.of(s1, s2));
+        given(stampRepository.searchStamps(null, null, "홍길동", "2024001")).willReturn(List.of(s1, s2));
 
-        List<MemberStampResponse> result = stampService.getMemberStampList("홍길동", null, null);
+        List<MemberStampResponse> result = stampService.getMemberStampList("홍길동", "2024001", null, null);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).year()).isEqualTo(2024);
@@ -75,12 +75,12 @@ class StampServiceTest {
     }
 
     @Test
-    @DisplayName("이름 + 연도·학기 조합 조회")
-    void getMemberStampList_byNameAndYearSemester() {
+    @DisplayName("이름 + 학번 + 연도·학기 조합 조회")
+    void getMemberStampList_byNameStudentNumAndYearSemester() {
         Stamp s = Stamp.create(member("홍길동", "2024001"), 2025, 1);
-        given(stampRepository.searchStamps(2025, 1, "홍길동")).willReturn(List.of(s));
+        given(stampRepository.searchStamps(2025, 1, "홍길동", "2024001")).willReturn(List.of(s));
 
-        List<MemberStampResponse> result = stampService.getMemberStampList("홍길동", 2025, 1);
+        List<MemberStampResponse> result = stampService.getMemberStampList("홍길동", "2024001", 2025, 1);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).year()).isEqualTo(2025);
@@ -90,7 +90,7 @@ class StampServiceTest {
     @Test
     @DisplayName("이름 없이 호출 시 IllegalArgumentException 발생")
     void getMemberStampList_noName_throws() {
-        assertThatThrownBy(() -> stampService.getMemberStampList(null, 2025, 1))
+        assertThatThrownBy(() -> stampService.getMemberStampList(null, "2024001", 2025, 1))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("이름");
     }
@@ -98,9 +98,35 @@ class StampServiceTest {
     @Test
     @DisplayName("공백 이름으로 호출 시 IllegalArgumentException 발생")
     void getMemberStampList_blankName_throws() {
-        assertThatThrownBy(() -> stampService.getMemberStampList("   ", 2025, 1))
+        assertThatThrownBy(() -> stampService.getMemberStampList("   ", "2024001", 2025, 1))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("이름");
+    }
+
+    @Test
+    @DisplayName("학번 없이 호출 시 IllegalArgumentException 발생")
+    void getMemberStampList_noStudentNum_throws() {
+        assertThatThrownBy(() -> stampService.getMemberStampList("홍길동", null, 2025, 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("학번");
+    }
+
+    @Test
+    @DisplayName("공백 학번으로 호출 시 IllegalArgumentException 발생")
+    void getMemberStampList_blankStudentNum_throws() {
+        assertThatThrownBy(() -> stampService.getMemberStampList("홍길동", "   ", 2025, 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("학번");
+    }
+
+    @Test
+    @DisplayName("이름은 일치하지만 학번이 다르면 빈 리스트 반환")
+    void getMemberStampList_wrongStudentNum_returnsEmpty() {
+        given(stampRepository.searchStamps(null, null, "홍길동", "9999999")).willReturn(List.of());
+
+        List<MemberStampResponse> result = stampService.getMemberStampList("홍길동", "9999999", null, null);
+
+        assertThat(result).isEmpty();
     }
 
     // ── getStampList ──────────────────────────────────────────────────────────
@@ -110,7 +136,7 @@ class StampServiceTest {
     void getStampList_byYearAndSemester() {
         Stamp s1 = stamp(member("홍길동", "2024001"));
         Stamp s2 = stamp(member("김철수", "2024002"));
-        given(stampRepository.searchStamps(2025, 1, null)).willReturn(List.of(s1, s2));
+        given(stampRepository.searchStamps(2025, 1, null, null)).willReturn(List.of(s1, s2));
 
         List<StampSummaryResponse> result = stampService.getStampList(2025, 1, null);
 
@@ -123,7 +149,7 @@ class StampServiceTest {
     @DisplayName("이름만으로 조회")
     void getStampList_byNameOnly() {
         Stamp s = stamp(member("홍길동", "2024001"));
-        given(stampRepository.searchStamps(null, null, "홍")).willReturn(List.of(s));
+        given(stampRepository.searchStamps(null, null, "홍", null)).willReturn(List.of(s));
 
         List<StampSummaryResponse> result = stampService.getStampList(null, null, "홍");
 
@@ -135,7 +161,7 @@ class StampServiceTest {
     @DisplayName("연도·학기 + 이름 조합 조회")
     void getStampList_byYearSemesterAndName() {
         Stamp s = stamp(member("홍길동", "2024001"));
-        given(stampRepository.searchStamps(2025, 1, "홍")).willReturn(List.of(s));
+        given(stampRepository.searchStamps(2025, 1, "홍", null)).willReturn(List.of(s));
 
         List<StampSummaryResponse> result = stampService.getStampList(2025, 1, "홍");
 
@@ -148,7 +174,7 @@ class StampServiceTest {
     void getStampList_blankName_treatedAsNull() {
         Stamp s1 = stamp(member("홍길동", "2024001"));
         Stamp s2 = stamp(member("김철수", "2024002"));
-        given(stampRepository.searchStamps(2025, 1, null)).willReturn(List.of(s1, s2));
+        given(stampRepository.searchStamps(2025, 1, null, null)).willReturn(List.of(s1, s2));
 
         List<StampSummaryResponse> result = stampService.getStampList(2025, 1, "   ");
 
@@ -158,7 +184,7 @@ class StampServiceTest {
     @Test
     @DisplayName("결과가 없으면 빈 리스트 반환")
     void getStampList_empty() {
-        given(stampRepository.searchStamps(2099, 2, null)).willReturn(List.of());
+        given(stampRepository.searchStamps(2099, 2, null, null)).willReturn(List.of());
 
         assertThat(stampService.getStampList(2099, 2, null)).isEmpty();
     }
@@ -208,6 +234,73 @@ class StampServiceTest {
         given(stampRepository.findByIdWithMember(999L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> stampService.giveStamp(999L, StampKind.FOOD, 1L))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessageContaining("999");
+    }
+
+    // ── deleteStamp ───────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("FOOD 스탬프 삭제 시 feedStampNum -1, totalStampCount -1")
+    void deleteStamp_food_success() {
+        Member member = member("홍길동", "2024001");
+        Stamp stamp = stamp(member);
+        stamp.incrementFeedStampNum(); // 미리 1 부여
+        member.incrementTotalStampCount();
+        Admin admin = admin();
+
+        given(stampRepository.findByIdWithMember(1L)).willReturn(Optional.of(stamp));
+        given(adminRepository.findById(10L)).willReturn(Optional.of(admin));
+        given(giveStampRepository.save(any(GiveStamp.class))).willAnswer(inv -> inv.getArgument(0));
+
+        StampSummaryResponse result = stampService.deleteStamp(1L, StampKind.FOOD, 10L);
+
+        assertThat(result.feedStampNum()).isEqualTo(0);
+        assertThat(result.exStampNum()).isEqualTo(0);
+        assertThat(member.getTotalStampCount()).isEqualTo(0);
+        verify(giveStampRepository).save(any(GiveStamp.class));
+    }
+
+    @Test
+    @DisplayName("EXTRA 스탬프 삭제 시 exStampNum -1, totalStampCount -1")
+    void deleteStamp_extra_success() {
+        Member member = member("김철수", "2024002");
+        Stamp stamp = stamp(member);
+        stamp.incrementExStampNum();
+        member.incrementTotalStampCount();
+        Admin admin = admin();
+
+        given(stampRepository.findByIdWithMember(2L)).willReturn(Optional.of(stamp));
+        given(adminRepository.findById(10L)).willReturn(Optional.of(admin));
+        given(giveStampRepository.save(any(GiveStamp.class))).willAnswer(inv -> inv.getArgument(0));
+
+        StampSummaryResponse result = stampService.deleteStamp(2L, StampKind.EXTRA, 10L);
+
+        assertThat(result.exStampNum()).isEqualTo(0);
+        assertThat(member.getTotalStampCount()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("feedStampNum이 0인 상태에서 FOOD 삭제 시 IllegalStateException 발생")
+    void deleteStamp_feedAlreadyZero_throws() {
+        Member member = member("홍길동", "2024001");
+        Stamp stamp = stamp(member); // feedStampNum = 0
+        Admin admin = admin();
+
+        given(stampRepository.findByIdWithMember(1L)).willReturn(Optional.of(stamp));
+        given(adminRepository.findById(10L)).willReturn(Optional.of(admin));
+
+        assertThatThrownBy(() -> stampService.deleteStamp(1L, StampKind.FOOD, 10L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("0");
+    }
+
+    @Test
+    @DisplayName("해당 스탬프 기록이 없으면 NoSuchElementException 발생")
+    void deleteStamp_stampNotFound_throws() {
+        given(stampRepository.findByIdWithMember(999L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> stampService.deleteStamp(999L, StampKind.FOOD, 1L))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessageContaining("999");
     }

@@ -3,6 +3,7 @@ package com.soonaemyoback.domain.member.admin.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.soonaemyoback.domain.member.admin.dto.AdminCreateRequest;
 import com.soonaemyoback.domain.member.admin.dto.AdminLoginRequest;
+import com.soonaemyoback.domain.member.admin.dto.ChangePasswordRequest;
 import com.soonaemyoback.domain.member.admin.entity.AdminRole;
 import com.soonaemyoback.domain.member.admin.repository.AdminRepository;
 
@@ -61,10 +63,33 @@ class AdminControllerTest {
     }
 
     @Test
-    @DisplayName("ROOT 로그인 성공 시 세션이 생성된다")
-    void login_success_createsSession() {
+    @DisplayName("ROOT 로그인 성공 시 세션이 생성되고 role이 반환된다")
+    void login_success_createsSessionAndReturnsRole() throws Exception {
         assertThat(rootSession).isNotNull();
         assertThat(rootSession.getAttribute("SPRING_SECURITY_CONTEXT")).isNotNull();
+
+        mockMvc.perform(post("/api/admin/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AdminLoginRequest(rootLoginId, rootPassword))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ROOT"));
+    }
+
+    @Test
+    @DisplayName("ADMIN 로그인 성공 시 role=ADMIN 반환")
+    void login_admin_returnsAdminRole() throws Exception {
+        AdminCreateRequest createRequest = new AdminCreateRequest("role_check_admin", "pass1234", "역할확인관리자");
+        mockMvc.perform(post("/api/admins")
+                .session(rootSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)));
+
+        mockMvc.perform(post("/api/admin/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(new AdminLoginRequest("role_check_admin", "pass1234"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADMIN"));
     }
 
     @Test
@@ -163,5 +188,91 @@ class AdminControllerTest {
         mockMvc.perform(get("/api/admins").session(rootSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].role").value(AdminRole.ROOT.name()));
+    }
+
+    // ── PATCH /api/admin/password ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("비밀번호 변경 성공 시 204 반환")
+    void changePassword_success_returns204() throws Exception {
+        mockMvc.perform(patch("/api/admin/password")
+                        .session(rootSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new ChangePasswordRequest(rootPassword, "newPassword1!", "newPassword1!"))))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("변경된 비밀번호로 다시 로그인 성공")
+    void changePassword_thenLoginWithNewPassword_success() throws Exception {
+        String newPassword = "newPassword1!";
+
+        mockMvc.perform(patch("/api/admin/password")
+                .session(rootSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        new ChangePasswordRequest(rootPassword, newPassword, newPassword))));
+
+        mockMvc.perform(post("/api/admin/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AdminLoginRequest(rootLoginId, newPassword))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ROOT"));
+    }
+
+    @Test
+    @DisplayName("현재 비밀번호가 틀리면 400 반환")
+    void changePassword_wrongCurrentPassword_returns400() throws Exception {
+        mockMvc.perform(patch("/api/admin/password")
+                        .session(rootSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new ChangePasswordRequest("wrongPassword", "newPassword1!", "newPassword1!"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("새 비밀번호와 확인 비밀번호가 다르면 400 반환")
+    void changePassword_mismatchedNewPasswords_returns400() throws Exception {
+        mockMvc.perform(patch("/api/admin/password")
+                        .session(rootSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new ChangePasswordRequest(rootPassword, "newPassword1!", "differentPassword!"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("비로그인 상태에서 비밀번호 변경 시 401 반환")
+    void changePassword_noAuth_returns401() throws Exception {
+        mockMvc.perform(patch("/api/admin/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new ChangePasswordRequest(rootPassword, "newPassword1!", "newPassword1!"))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("ADMIN 권한으로 비밀번호 변경 시 403 반환")
+    void changePassword_asAdmin_returns403() throws Exception {
+        AdminCreateRequest createRequest = new AdminCreateRequest("pw_test_admin", "pass1234", "비밀번호테스트관리자");
+        mockMvc.perform(post("/api/admins")
+                .session(rootSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)));
+
+        MvcResult adminLoginResult = mockMvc.perform(post("/api/admin/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AdminLoginRequest("pw_test_admin", "pass1234"))))
+                .andReturn();
+        MockHttpSession adminSession = (MockHttpSession) adminLoginResult.getRequest().getSession();
+
+        mockMvc.perform(patch("/api/admin/password")
+                        .session(adminSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new ChangePasswordRequest("pass1234", "newPassword1!", "newPassword1!"))))
+                .andExpect(status().isForbidden());
     }
 }

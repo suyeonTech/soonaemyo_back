@@ -55,6 +55,7 @@ repositories {
 }
 
 dependencies {
+    implementation("io.github.cdimascio:dotenv-java:3.1.0")
     implementation("org.springframework.boot:spring-boot-h2console")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")

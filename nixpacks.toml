@@ -5,4 +5,4 @@ nixPkgs = ["jdk21"]
 cmds = ["./gradlew bootJar -x test"]
 
 [start]
-cmd = "java -jar build/libs/soonaemyo-back-0.0.1-SNAPSHOT.jar"
+cmd = "java -jar $(find build/libs -name '*.jar' | head -1)"

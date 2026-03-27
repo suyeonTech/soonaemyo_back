@@ -1,0 +1,15 @@
+# 1. 빌드 단계 (Gradle 기준, Maven이면 mvn으로 변경)
+FROM eclipse-temurin:17-jdk-jammy AS build
+WORKDIR /app
+COPY . .
+RUN ./gradlew bootJar
+
+# 2. 실행 단계
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+# 빌드된 jar 파일 이름을 프로젝트에 맞춰 수정하세요 (보통 build/libs/*.jar)
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# Railway는 PORT 환경 변수를 자동으로 주입합니다.
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

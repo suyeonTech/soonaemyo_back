@@ -1,0 +1,2 @@
+[deploy]
+startCommand = "java $JAVA_OPTS -jar build/libs/soonaemyo-back-0.0.1-SNAPSHOT.jar"

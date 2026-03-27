@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "4.0.3"
+    id("org.springframework.boot") version "3.3.0"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.diffplug.spotless") version "8.1.0"
 }
@@ -56,22 +56,17 @@ repositories {
 
 dependencies {
     implementation("io.github.cdimascio:dotenv-java:3.1.0")
-    implementation("org.springframework.boot:spring-boot-h2console")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     runtimeOnly("org.postgresql:postgresql")
-    testRuntimeOnly("com.h2database:h2")
+    runtimeOnly("com.h2database:h2")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-data-jdbc-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-security-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

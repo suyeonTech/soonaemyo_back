@@ -2,8 +2,8 @@ package com.soonaemyoback.domain.member.member.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -48,7 +48,7 @@ class MemberServiceTest {
     @DisplayName("3명 정상 등록 후 스탬프도 저장된다")
     void registerMembers_success() {
         List<MemberCreateRequest> list = List.of(req("2024001"), req("2024002"), req("2024003"));
-        given(memberRepository.existsByStudentNum(anyString())).willReturn(false);
+        given(memberRepository.existsAnyByStudentNumIn(any())).willReturn(false);
         given(memberRepository.saveAll(anyList())).willAnswer(inv -> inv.getArgument(0));
         given(stampRepository.saveAll(anyList())).willAnswer(inv -> inv.getArgument(0));
 
@@ -63,7 +63,7 @@ class MemberServiceTest {
     @DisplayName("등록 시 스탬프의 모든 카운트가 0으로 초기화된다")
     void registerMembers_stampInitializedToZero() {
         List<MemberCreateRequest> list = List.of(req("2024001"));
-        given(memberRepository.existsByStudentNum(anyString())).willReturn(false);
+        given(memberRepository.existsAnyByStudentNumIn(any())).willReturn(false);
         given(memberRepository.saveAll(anyList())).willAnswer(inv -> inv.getArgument(0));
 
         @SuppressWarnings("unchecked")
@@ -101,11 +101,10 @@ class MemberServiceTest {
     @DisplayName("DB에 이미 존재하는 studentNum 시 예외 발생")
     void registerMembers_existingStudentNum_throws() {
         List<MemberCreateRequest> list = List.of(req("2024001"));
-        given(memberRepository.existsByStudentNum("2024001")).willReturn(true);
+        given(memberRepository.existsAnyByStudentNumIn(any())).willReturn(true);
 
         assertThatThrownBy(() -> memberService.registerMembers(batchReq(list)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("2024001");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -121,7 +120,7 @@ class MemberServiceTest {
     @DisplayName("정상 등록 시 saveAll이 호출된다")
     void registerMembers_callsSaveAll() {
         List<MemberCreateRequest> list = List.of(req("2024001"), req("2024002"));
-        given(memberRepository.existsByStudentNum(anyString())).willReturn(false);
+        given(memberRepository.existsAnyByStudentNumIn(any())).willReturn(false);
         given(memberRepository.saveAll(anyList())).willAnswer(inv -> inv.getArgument(0));
         given(stampRepository.saveAll(anyList())).willAnswer(inv -> inv.getArgument(0));
 

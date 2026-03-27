@@ -1,7 +1,6 @@
 package com.soonaemyoback.domain.stamp.stamp.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,8 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
@@ -24,14 +23,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soonaemyoback.domain.member.admin.dto.AdminCreateRequest;
 import com.soonaemyoback.domain.member.admin.dto.AdminLoginRequest;
 import com.soonaemyoback.domain.member.member.dto.MemberBatchCreateRequest;
 import com.soonaemyoback.domain.member.member.dto.MemberCreateRequest;
 import com.soonaemyoback.domain.stamp.giveStamp.dto.GiveStampRequest;
 import com.soonaemyoback.domain.stamp.stamp.entity.StampKind;
-
-import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -289,12 +287,12 @@ class StampControllerTest {
                 .andExpect(jsonPath("$.feedStampNum").value(1));
     }
 
-    // ── DELETE /api/stamps/give ───────────────────────────────────────────────
+    // ── POST /api/stamps/{id}/revoke ─────────────────────────────────────────
 
     @Test
     @DisplayName("인증 없이 스탬프 삭제 시 401 반환")
     void deleteStamp_noAuth_returns401() throws Exception {
-        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+        mockMvc.perform(post("/api/stamps/{stampId}/revoke", stampId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
                 .andExpect(status().isUnauthorized());
@@ -308,7 +306,7 @@ class StampControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))));
 
-        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+        mockMvc.perform(post("/api/stamps/{stampId}/revoke", stampId)
                         .session(adminSession)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
@@ -325,7 +323,7 @@ class StampControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.EXTRA))));
 
-        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+        mockMvc.perform(post("/api/stamps/{stampId}/revoke", stampId)
                         .session(adminSession)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.EXTRA))))
@@ -336,7 +334,7 @@ class StampControllerTest {
     @Test
     @DisplayName("스탬프 수가 0인 상태에서 삭제 시 400 반환")
     void deleteStamp_alreadyZero_returns400() throws Exception {
-        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+        mockMvc.perform(post("/api/stamps/{stampId}/revoke", stampId)
                         .session(adminSession)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
@@ -346,7 +344,7 @@ class StampControllerTest {
     @Test
     @DisplayName("존재하지 않는 stampId로 삭제 시 404 반환")
     void deleteStamp_stampNotFound_returns404() throws Exception {
-        mockMvc.perform(delete("/api/stamps/{stampId}/give", 99999L)
+        mockMvc.perform(post("/api/stamps/{stampId}/revoke", 99999L)
                         .session(adminSession)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))
@@ -361,7 +359,7 @@ class StampControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))));
 
-        mockMvc.perform(delete("/api/stamps/{stampId}/give", stampId)
+        mockMvc.perform(post("/api/stamps/{stampId}/revoke", stampId)
                         .session(rootSession)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GiveStampRequest(StampKind.FOOD))))

@@ -2,6 +2,7 @@ package com.soonaemyoback.global.security;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -19,6 +21,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Value("${csrf.enabled:true}")
+    private boolean csrfEnabled;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -36,7 +41,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> {
+                    if (csrfEnabled) {
+                        csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+                    } else {
+                        csrf.disable();
+                    }
+                })
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/admin/login")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/member/stamps")
@@ -44,7 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/admin/password")
-                        .hasRole("ROOT")
+                        .hasAnyRole("ROOT", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/admins")
                         .hasRole("ROOT")
                         .requestMatchers(HttpMethod.DELETE, "/api/admins/**")
@@ -56,8 +67,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/stamps")
                         .hasAnyRole("ADMIN", "ROOT")
                         .requestMatchers(HttpMethod.POST, "/api/stamps/**")
-                        .hasAnyRole("ADMIN", "ROOT")
-                        .requestMatchers(HttpMethod.DELETE, "/api/stamps/**")
                         .hasAnyRole("ADMIN", "ROOT")
                         .anyRequest()
                         .authenticated())

@@ -8,24 +8,27 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Stamp extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
+    @Setter(AccessLevel.PROTECTED)
     private Member member;
 
     @Column(name = "stamp_year")
+    @Setter(AccessLevel.PROTECTED)
     private Integer year;
 
     @Column(name = "stamp_semester")
+    @Setter(AccessLevel.PROTECTED)
     private Integer semester;
 
     private Integer feedStampNum = 0;

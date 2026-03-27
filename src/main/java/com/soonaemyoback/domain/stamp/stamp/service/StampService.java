@@ -69,7 +69,7 @@ public class StampService {
 
         member.incrementTotalStampCount();
 
-        giveStampRepository.save(GiveStamp.create(member, admin, stampKind.name(), 1));
+        giveStampRepository.save(GiveStamp.create(member, admin, stampKind, 1));
 
         return StampSummaryResponse.from(stamp);
     }
@@ -94,7 +94,7 @@ public class StampService {
 
         member.decrementTotalStampCount();
 
-        giveStampRepository.save(GiveStamp.create(member, admin, stampKind.name(), -1));
+        giveStampRepository.save(GiveStamp.create(member, admin, stampKind, -1));
 
         return StampSummaryResponse.from(stamp);
     }

@@ -13,8 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,13 +22,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soonaemyoback.domain.member.admin.dto.AdminCreateRequest;
 import com.soonaemyoback.domain.member.admin.dto.AdminLoginRequest;
 import com.soonaemyoback.domain.member.admin.dto.ChangePasswordRequest;
 import com.soonaemyoback.domain.member.admin.entity.AdminRole;
 import com.soonaemyoback.domain.member.admin.repository.AdminRepository;
-
-import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -256,8 +255,8 @@ class AdminControllerTest {
     }
 
     @Test
-    @DisplayName("ADMIN 권한으로 비밀번호 변경 시 403 반환")
-    void changePassword_asAdmin_returns403() throws Exception {
+    @DisplayName("ADMIN 권한으로 비밀번호 변경 성공")
+    void changePassword_asAdmin_success() throws Exception {
         AdminCreateRequest createRequest = new AdminCreateRequest("pw_test_admin", "pass1234", "비밀번호테스트관리자");
         mockMvc.perform(post("/api/admins")
                 .session(rootSession)
@@ -276,6 +275,6 @@ class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new ChangePasswordRequest("pass1234", "newPassword1!", "newPassword1!"))))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNoContent());
     }
 }

@@ -39,11 +39,11 @@ public class MemberService {
             throw new IllegalArgumentException("요청 내에 중복된 학번이 존재합니다.");
         }
 
-        // DB 중복 체크
-        for (MemberCreateRequest req : members) {
-            if (memberRepository.existsByStudentNum(req.studentNum())) {
-                throw new IllegalArgumentException("이미 등록된 학번입니다: " + req.studentNum());
-            }
+        // DB 중복 체크 (한 번의 쿼리로 모든 학번 확인)
+        List<String> studentNums =
+                members.stream().map(MemberCreateRequest::studentNum).toList();
+        if (memberRepository.existsAnyByStudentNumIn(studentNums)) {
+            throw new IllegalArgumentException("요청 내에 이미 등록된 학번이 포함되어 있습니다.");
         }
 
         List<Member> savedMembers = memberRepository.saveAll(members.stream()

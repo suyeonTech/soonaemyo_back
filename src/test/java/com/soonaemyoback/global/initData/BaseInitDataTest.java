@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.soonaemyoback.domain.member.admin.entity.Admin;
@@ -15,6 +16,7 @@ import com.soonaemyoback.domain.member.admin.entity.AdminRole;
 import com.soonaemyoback.domain.member.admin.repository.AdminRepository;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 class BaseInitDataTest {
 

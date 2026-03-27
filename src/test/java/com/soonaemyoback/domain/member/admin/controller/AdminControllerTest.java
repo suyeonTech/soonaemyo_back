@@ -266,7 +266,8 @@ class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new AdminLoginRequest("pw_test_admin", "pass1234"))))
                 .andReturn();
-        MockHttpSession adminSession = (MockHttpSession) adminLoginResult.getRequest().getSession();
+        MockHttpSession adminSession =
+                (MockHttpSession) adminLoginResult.getRequest().getSession();
 
         mockMvc.perform(patch("/api/admin/password")
                         .session(adminSession)

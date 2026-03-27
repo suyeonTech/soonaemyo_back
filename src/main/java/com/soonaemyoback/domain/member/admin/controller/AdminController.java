@@ -55,8 +55,7 @@ public class AdminController {
 
     @PatchMapping("/admin/password")
     public ResponseEntity<Void> changePassword(
-            @RequestBody ChangePasswordRequest request,
-            @AuthenticationPrincipal AdminUserDetails adminUserDetails) {
+            @RequestBody ChangePasswordRequest request, @AuthenticationPrincipal AdminUserDetails adminUserDetails) {
         adminService.changePassword(adminUserDetails.getAdminId(), request);
         return ResponseEntity.noContent().build();
     }

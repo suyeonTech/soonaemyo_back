@@ -168,8 +168,12 @@ class StampControllerTest {
                 .andReturn();
 
         // 이름만 검색할 때 year/semester 쿠키의 maxAge가 0이어야 한다
-        assertThat(Objects.requireNonNull(result.getResponse().getCookie("stamp_filter_year")).getMaxAge()).isEqualTo(0);
-        assertThat(Objects.requireNonNull(result.getResponse().getCookie("stamp_filter_semester")).getMaxAge()).isEqualTo(0);
+        assertThat(Objects.requireNonNull(result.getResponse().getCookie("stamp_filter_year"))
+                        .getMaxAge())
+                .isEqualTo(0);
+        assertThat(Objects.requireNonNull(result.getResponse().getCookie("stamp_filter_semester"))
+                        .getMaxAge())
+                .isEqualTo(0);
     }
 
     @Test

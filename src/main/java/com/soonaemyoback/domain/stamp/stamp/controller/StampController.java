@@ -31,7 +31,7 @@ public class StampController {
 
     private final StampService stampService;
 
-    //관리자의 스탬프 조회(부원검색)
+    // 관리자의 스탬프 조회(부원검색)
     @GetMapping("/stamps")
     public ResponseEntity<List<StampSummaryResponse>> getStamps(
             @RequestParam(required = false) Integer year,
@@ -60,7 +60,7 @@ public class StampController {
         response.addCookie(cookie);
     }
 
-    //부원의 스탬프 조회(이름, 학번 필요)
+    // 부원의 스탬프 조회(이름, 학번 필요)
     @GetMapping("/member/stamps")
     public ResponseEntity<List<MemberStampResponse>> getMemberStamps(
             @RequestParam String name,
@@ -71,7 +71,7 @@ public class StampController {
         return ResponseEntity.ok(stampService.getMemberStampList(name, studentNum, year, semester));
     }
 
-    //스탬프 부여
+    // 스탬프 부여
     @PostMapping("/stamps/{stampId}/give")
     public ResponseEntity<StampSummaryResponse> giveStamp(
             @PathVariable Long stampId,
@@ -81,7 +81,7 @@ public class StampController {
         return ResponseEntity.ok(stampService.giveStamp(stampId, request.stampKind(), adminUserDetails.getAdminId()));
     }
 
-    //스탬프 박탈
+    // 스탬프 박탈
     @PostMapping("/stamps/{stampId}/revoke")
     public ResponseEntity<StampSummaryResponse> revokeStamp(
             @PathVariable Long stampId,

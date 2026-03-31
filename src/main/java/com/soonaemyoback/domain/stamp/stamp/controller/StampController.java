@@ -31,6 +31,7 @@ public class StampController {
 
     private final StampService stampService;
 
+    // 관리자의 스탬프 조회(부원검색)
     @GetMapping("/stamps")
     public ResponseEntity<List<StampSummaryResponse>> getStamps(
             @RequestParam(required = false) Integer year,
@@ -38,23 +39,28 @@ public class StampController {
             @RequestParam(required = false) String name,
             HttpServletResponse response) {
 
-        if (year != null) {
-            Cookie yearCookie = new Cookie("stamp_filter_year", String.valueOf(year));
-            yearCookie.setPath("/");
-            yearCookie.setMaxAge(COOKIE_MAX_AGE);
-            response.addCookie(yearCookie);
-        }
+        updateFilterCookie(response, "stamp_filter_year", year);
 
-        if (semester != null) {
-            Cookie semCookie = new Cookie("stamp_filter_semester", String.valueOf(semester));
-            semCookie.setPath("/");
-            semCookie.setMaxAge(COOKIE_MAX_AGE);
-            response.addCookie(semCookie);
-        }
+        updateFilterCookie(response, "stamp_filter_semester", semester);
 
         return ResponseEntity.ok(stampService.getStampList(year, semester, name));
     }
 
+    // 쿠키 처리를 위한 헬퍼 메서드
+    private void updateFilterCookie(HttpServletResponse response, String cookieName, Object value) {
+        Cookie cookie = new Cookie(cookieName, value != null ? String.valueOf(value) : "");
+        cookie.setPath("/");
+
+        if (value != null) {
+            cookie.setMaxAge(COOKIE_MAX_AGE);
+        } else {
+            cookie.setMaxAge(0);
+        }
+
+        response.addCookie(cookie);
+    }
+
+    // 부원의 스탬프 조회(이름, 학번 필요)
     @GetMapping("/member/stamps")
     public ResponseEntity<List<MemberStampResponse>> getMemberStamps(
             @RequestParam String name,
@@ -65,6 +71,7 @@ public class StampController {
         return ResponseEntity.ok(stampService.getMemberStampList(name, studentNum, year, semester));
     }
 
+    // 스탬프 부여
     @PostMapping("/stamps/{stampId}/give")
     public ResponseEntity<StampSummaryResponse> giveStamp(
             @PathVariable Long stampId,
@@ -74,6 +81,7 @@ public class StampController {
         return ResponseEntity.ok(stampService.giveStamp(stampId, request.stampKind(), adminUserDetails.getAdminId()));
     }
 
+    // 스탬프 박탈
     @PostMapping("/stamps/{stampId}/revoke")
     public ResponseEntity<StampSummaryResponse> revokeStamp(
             @PathVariable Long stampId,

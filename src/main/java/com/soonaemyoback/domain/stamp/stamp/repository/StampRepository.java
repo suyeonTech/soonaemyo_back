@@ -14,7 +14,8 @@ public interface StampRepository extends JpaRepository<Stamp, Long> {
     @Query("SELECT s FROM Stamp s JOIN FETCH s.member m "
             + "WHERE (:year IS NULL OR s.year = :year) "
             + "AND (:semester IS NULL OR s.semester = :semester) "
-            + "AND (:name IS NULL OR m.name LIKE CONCAT('%', :name, '%')) "
+            + "AND (CAST(:name AS string) IS NULL OR m.name LIKE CONCAT('%', :name, '%')) " // postgres는 자료형에 엄격하여 name의
+            // 자료형 명시
             + "AND (:studentNum IS NULL OR m.studentNum = :studentNum) "
             + "ORDER BY m.name")
     List<Stamp> searchStamps(

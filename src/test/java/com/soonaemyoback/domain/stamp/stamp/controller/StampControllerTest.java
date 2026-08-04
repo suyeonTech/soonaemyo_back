@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -157,7 +158,7 @@ class StampControllerTest {
     // ── GET /api/stamps — 이름 검색 ──────────────────────────────────────────
 
     @Test
-    @DisplayName("이름만으로 조회 시 해당 이름 포함 결과 반환, 쿠키 미저장")
+    @DisplayName("이름만으로 조회 시 해당 이름 포함 결과 반환, 쿠키 maxAge 0")
     void getStamps_byNameOnly_returnsMatchedAndNoCookies() throws Exception {
         MvcResult result = mockMvc.perform(
                         get("/api/stamps").session(adminSession).param("name", "홍길동"))
@@ -166,9 +167,13 @@ class StampControllerTest {
                 .andExpect(jsonPath("$[0].memberName").value("홍길동"))
                 .andReturn();
 
-        // 이름만 검색할 때 year/semester 쿠키가 설정되지 않아야 한다
-        assertThat(result.getResponse().getCookie("stamp_filter_year")).isNull();
-        assertThat(result.getResponse().getCookie("stamp_filter_semester")).isNull();
+        // 이름만 검색할 때 year/semester 쿠키의 maxAge가 0이어야 한다
+        assertThat(Objects.requireNonNull(result.getResponse().getCookie("stamp_filter_year"))
+                        .getMaxAge())
+                .isEqualTo(0);
+        assertThat(Objects.requireNonNull(result.getResponse().getCookie("stamp_filter_semester"))
+                        .getMaxAge())
+                .isEqualTo(0);
     }
 
     @Test

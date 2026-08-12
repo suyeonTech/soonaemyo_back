@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
@@ -303,5 +304,32 @@ class StampServiceTest {
         assertThatThrownBy(() -> stampService.deleteStamp(999L, StampKind.FOOD, 1L))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessageContaining("999");
+    }
+
+    // ── makeStamps ────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("스탬프판 없는 활성 멤버 2명 → save 2번 호출, 반환값 2")
+    void makeStamps_success() {
+        Member m1 = member("홍길동", "2024001");
+        Member m2 = member("김철수", "2024002");
+        given(stampRepository.findActiveMembersWithoutStamp(2026, 1)).willReturn(List.of(m1, m2));
+        given(stampRepository.save(any(Stamp.class))).willAnswer(inv -> inv.getArgument(0));
+
+        Integer result = stampService.makeStamps(2026, 1);
+
+        assertThat(result).isEqualTo(2);
+        verify(stampRepository, times(2)).save(any(Stamp.class));
+    }
+
+    @Test
+    @DisplayName("대상 멤버 없으면 save 호출 없이 0 반환")
+    void makeStamps_noEligibleMembers() {
+        given(stampRepository.findActiveMembersWithoutStamp(2026, 1)).willReturn(List.of());
+
+        Integer result = stampService.makeStamps(2026, 1);
+
+        assertThat(result).isEqualTo(0);
+        verify(stampRepository, times(0)).save(any(Stamp.class));
     }
 }

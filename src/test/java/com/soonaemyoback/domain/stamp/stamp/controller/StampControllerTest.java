@@ -356,19 +356,19 @@ class StampControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ── POST /api/stamps/make ─────────────────────────────────────────────────
+    // ── POST /api/stamps ─────────────────────────────────────────────────
 
     @Test
     @DisplayName("인증 없이 스탬프판 생성 시 401 반환")
     void makeStamps_noAuth_returns401() throws Exception {
-        mockMvc.perform(post("/api/stamps/make").param("year", "2026").param("semester", "1"))
+        mockMvc.perform(post("/api/stamps").param("year", "2026").param("semester", "1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @DisplayName("새 학기 스탬프판 생성 시 활성 멤버 수 반환")
     void makeStamps_newSemester_returnsCreatedCount() throws Exception {
-        mockMvc.perform(post("/api/stamps/make")
+        mockMvc.perform(post("/api/stamps")
                         .session(adminSession)
                         .param("year", "2026")
                         .param("semester", "1"))
@@ -379,7 +379,7 @@ class StampControllerTest {
     @Test
     @DisplayName("이미 스탬프판이 있는 학기 재요청 시 0 반환")
     void makeStamps_alreadyExists_returnsZero() throws Exception {
-        mockMvc.perform(post("/api/stamps/make")
+        mockMvc.perform(post("/api/stamps")
                         .session(adminSession)
                         .param("year", "2025")
                         .param("semester", "1"))

@@ -90,4 +90,11 @@ public class StampController {
 
         return ResponseEntity.ok(stampService.deleteStamp(stampId, request.stampKind(), adminUserDetails.getAdminId()));
     }
+
+    // 특정학기 스탬프판 일괄생성
+    @PostMapping("/stamps/make")
+    public ResponseEntity<Integer> makeStamps(@RequestParam Integer year, @RequestParam Integer semester) {
+
+        return ResponseEntity.ok(stampService.makeStamps(year, semester));
+    }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.soonaemyoback.domain.member.member.entity.Member;
 import com.soonaemyoback.domain.stamp.stamp.entity.Stamp;
 
 public interface StampRepository extends JpaRepository<Stamp, Long> {
@@ -23,6 +24,10 @@ public interface StampRepository extends JpaRepository<Stamp, Long> {
             @Param("semester") Integer semester,
             @Param("name") String name,
             @Param("studentNum") String studentNum);
+
+    @Query("SELECT m FROM Member m WHERE m.withdrawnAt IS NULL "
+            + "AND NOT EXISTS (SELECT s FROM Stamp s WHERE s.member = m AND s.year = :year AND s.semester = :semester)")
+    List<Member> findActiveMembersWithoutStamp(@Param("year") Integer year, @Param("semester") Integer semester);
 
     @Query("SELECT s FROM Stamp s JOIN FETCH s.member WHERE s.id = :id")
     Optional<Stamp> findByIdWithMember(@Param("id") Long id);

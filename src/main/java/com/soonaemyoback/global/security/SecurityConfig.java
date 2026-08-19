@@ -29,7 +29,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "https://soonaemyo-front.vercel.app"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "https://soonaemyo-front.vercel.app",
+                "https://soonaemyo.site",
+                "https://www.soonaemyo.site"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

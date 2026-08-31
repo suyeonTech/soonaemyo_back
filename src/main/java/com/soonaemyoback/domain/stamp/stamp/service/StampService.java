@@ -50,6 +50,13 @@ public class StampService {
     }
 
     @Transactional
+    public Integer makeStamps(Integer year, Integer semester) {
+        List<Member> members = stampRepository.findActiveMembersWithoutStamp(year, semester);
+        members.forEach(member -> stampRepository.save(Stamp.create(member, year, semester)));
+        return members.size();
+    }
+
+    @Transactional
     public StampSummaryResponse giveStamp(Long stampId, StampKind stampKind, Long adminId) {
         Stamp stamp = stampRepository
                 .findByIdWithMember(stampId)
